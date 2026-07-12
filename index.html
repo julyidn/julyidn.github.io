@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Galeri portofolio video YouTube interaktif - JULYIDN">
+    <title>JULYIDN | Video Archive</title>
+    
+    <!-- Google Fonts for Neo-Brutalism Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+    <!-- Playful Graphic Elements (Aman dari klik) -->
+    <div class="deco deco-star">✦</div>
+    <div class="deco deco-smiley">☻</div>
+    <div class="deco deco-arrow">➔</div>
+    <div class="deco deco-badge">PRO</div>
+
+    <main class="app-container">
+        
+        <header class="gallery-header">
+            <h1 id="gallery-title" class="brand-title">JULYIDN</h1>
+            <div class="brand-subtitle-container">
+                <span class="brand-subtitle">CONTENT ARCHIVE // GAMING & BEYOND</span>
+            </div>
+            
+            <!-- Social Media Links -->
+            <div class="social-links">
+                <a href="https://www.tiktok.com/@julyidn" target="_blank" class="social-btn tiktok">🎵 TikTok</a>
+		<a href="https://saweria.co/julyidn" target="_blank" class="social-btn saweria">☕ Saweria</a>
+                <a href="https://www.youtube.com/@JulyIDN" target="_blank" class="social-btn youtube">▶️ YouTube</a>
+            </div>
+        </header>
+
+        <section class="gallery-content" aria-labelledby="gallery-title">
+            
+            <div id="loading-state" class="ui-state" aria-live="polite">
+                <div class="spinner"></div>
+                <p>SYNCING DATA...</p>
+            </div>
+
+            <div id="error-state" class="ui-state" hidden aria-live="assertive">
+                <h2>GLITCH IN THE MATRIX!</h2>
+                <p>Gagal memuat galeri. Silakan periksa koneksi Anda dan coba lagi.</p>
+                <button type="button" id="retry-btn">REBOOT SYSTEM</button>
+            </div>
+
+            <!-- Kategori Pembagian Video -->
+            <div id="gallery-sections" hidden>
+                <div class="category-section">
+                    <div class="category-header-wrap">
+                        <h2 class="category-badge badge-video">▶ REGULAR VIDEOS</h2>
+                    </div>
+                    <div id="video-grid" class="video-grid-container"></div>
+                </div>
+
+                <div class="category-section">
+                    <div class="category-header-wrap align-right">
+                        <h2 class="category-badge badge-shorts">⚡ YT SHORTS</h2>
+                    </div>
+                    <div id="shorts-grid" class="video-grid-container shorts-grid-container"></div>
+                </div>
+
+                <div class="category-section">
+                    <div class="category-header-wrap">
+                        <h2 class="category-badge badge-live">🔴 LIVE VIDEOS</h2>
+                    </div>
+                    <div id="live-grid" class="video-grid-container"></div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="back-to-top" aria-label="Kembali ke atas">⬆️</button>
+
+    <script src="index.js" defer></script>
+</body>
+</html>
