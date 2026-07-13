@@ -3,18 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Galeri portofolio video YouTube interaktif - JULYIDN">
     <title>JULYIDN | Video Archive</title>
-    <link rel="icon" type="image/jpg" href="LOGOTYPE.jpg">
+    <meta name="description" content="Galeri portofolio video YouTube interaktif - JULYIDN">
     
+    <!-- Open Graph / Meta Tags -->
+    <meta property="og:title" content="JULYIDN | Video Archive">
+    <meta property="og:description" content="Arsip konten video, shorts, dan live streaming JULYIDN. Tonton gameplay seru Honor of Kings (HOK) dan konten gaming lainnya!">
+    <meta property="og:image" content="LOGOTYPE.jpg">
+    <meta property="og:url" content="https://julyidn.com">
+    <meta property="og:type" content="website">
+
+    <link rel="icon" type="image/jpg" href="LOGOTYPE.jpg">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
 
-    <div class="deco deco-star">✦</div>
-    <div class="deco deco-smiley">☻</div>
-    
     <main class="app-container">
         
         <header class="gallery-header">
@@ -23,32 +27,37 @@
                 <span class="brand-subtitle">CONTENT ARCHIVE // GAMING & BEYOND</span>
             </div>
             
+            <!-- ABOUT SECTION -->
+            <div class="about-section">
+                <p>Selamat datang di arsip konten <strong>JULYIDN</strong>! Di sini kamu bisa menelusuri galeri lengkap dari video reguler, YouTube Shorts, hingga siaran ulang live streaming. Temukan berbagai keseruan gameplay Honor of Kings (HOK), tips & trik push rank, serta momen epik lainnya. Jadwal live streaming rutin tayang setiap malam!</p>
+            </div>
+
             <div class="social-links">
-                <a href="https://www.tiktok.com/@julyidn" target="_blank" class="social-btn tiktok">🎵 TikTok</a>
-                <a href="https://saweria.co/julyidn" target="_blank" class="social-btn saweria">☕ Saweria</a>
-                <a href="https://www.youtube.com/@JulyIDN" target="_blank" class="social-btn youtube">▶️ YouTube</a>
+                <a href="https://www.tiktok.com/@julyidn" target="_blank" class="social-btn tiktok">TikTok</a>
+                <a href="https://saweria.co/julyidn" target="_blank" class="social-btn saweria">Saweria</a>
+                <a href="https://www.youtube.com/@JulyIDN" target="_blank" class="social-btn youtube">YouTube</a>
             </div>
             
             <!-- SEARCH & FILTER BAR (NEO-BRUTALISM STYLE) -->
             <div class="search-sort-container">
                 <div class="search-wrapper">
-                    <label for="search-input" class="search-sort-label">🔍 Cari Arsip Video</label>
+                    <label for="search-input" class="search-sort-label">Cari Arsip Video</label>
                     <input type="text" id="search-input" class="brutal-input" placeholder="Ketik judul video di sini...">
                 </div>
                 <div class="sort-wrapper">
-                    <label for="sort-select" class="search-sort-label">🔀 Urutkan Konten</label>
+                    <label for="sort-select" class="search-sort-label">Urutkan Konten</label>
                     <select id="sort-select" class="brutal-select">
-                        <option value="newest">📅 Rilis: Terbaru</option>
-                        <option value="oldest">⏳ Rilis: Terlama</option>
-                        <option value="popular">👁 Paling Populer (Views)</option>
-                        <option value="liked">👍 Paling Disukai (Likes)</option>
+                        <option value="newest">Rilis: Terbaru</option>
+                        <option value="oldest">Rilis: Terlama</option>
+                        <option value="popular">Paling Populer (Views)</option>
+                        <option value="liked">Paling Disukai (Likes)</option>
                     </select>
                 </div>
             </div>
 
             <!-- Tombol Refresh Data Baru -->
             <div class="controls-container">
-                <button id="refresh-btn" class="action-btn">🔄 REFRESH DATA</button>
+                <button id="refresh-btn" class="action-btn">REFRESH DATA</button>
             </div>
         </header>
 
@@ -68,21 +77,21 @@
             <div id="gallery-sections" hidden>
                 <div class="category-section">
                     <div class="category-header-wrap">
-                        <h2 class="category-badge badge-video">▶ REGULAR VIDEOS</h2>
+                        <h2 class="category-badge badge-video">REGULAR VIDEOS</h2>
                     </div>
                     <div id="video-grid" class="video-grid-container"></div>
                 </div>
 
                 <div class="category-section">
                     <div class="category-header-wrap align-right">
-                        <h2 class="category-badge badge-shorts">⚡ YT SHORTS</h2>
+                        <h2 class="category-badge badge-shorts">YT SHORTS</h2>
                     </div>
                     <div id="shorts-grid" class="video-grid-container shorts-grid-container"></div>
                 </div>
 
                 <div class="category-section">
                     <div class="category-header-wrap">
-                        <h2 class="category-badge badge-live">🔴 LIVE VIDEOS</h2>
+                        <h2 class="category-badge badge-live">LIVE VIDEOS</h2>
                     </div>
                     <div id="live-grid" class="video-grid-container"></div>
                 </div>
@@ -92,7 +101,19 @@
 
     </main>
 
-    <button id="back-to-top" class="back-to-top" aria-label="Kembali ke atas">⬆️</button>
+    <!-- FOOTER SECTION -->
+    <footer class="app-footer">
+        <div class="footer-content">
+            <h2 class="footer-brand">JULYIDN</h2>
+            <p>&copy; 2026 JULYIDN. All Rights Reserved.</p>
+            <div class="footer-links">
+                <a href="mailto:business@domainkamu.com" class="footer-btn">Business Inquiries</a>
+            </div>
+            <p class="disclaimer">Disclaimer: Website ini adalah portofolio galeri arsip konten dan tidak terafiliasi secara resmi dengan pihak ketiga mana pun.</p>
+        </div>
+    </footer>
+
+    <button id="back-to-top" class="back-to-top" aria-label="Kembali ke atas">UP</button>
 
     <script src="index.js" defer></script>
 </body>
