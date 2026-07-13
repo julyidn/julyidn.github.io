@@ -11,7 +11,11 @@ const CONFIG = {
         live: 3
     },
     BASE_URL: 'https://www.googleapis.com/youtube/v3/search',
-    VIDEO_URL: 'https://www.googleapis.com/youtube/v3/videos'
+    VIDEO_URL: 'https://www.googleapis.com/youtube/v3/videos',
+    
+    // Konfigurasi Sistem Cache
+    CACHE_KEY: 'yt_gallery_cache',
+    CACHE_DURATION: 1000 * 60 * 60 // 1 jam dalam milidetik
 };
 
 /**
@@ -25,11 +29,12 @@ const DOM = {
     loadingState: document.getElementById('loading-state'),
     errorState: document.getElementById('error-state'),
     retryBtn: document.getElementById('retry-btn'),
-    backToTopBtn: document.getElementById('back-to-top')
+    backToTopBtn: document.getElementById('back-to-top'),
+    refreshBtn: document.getElementById('refresh-btn') // Elemen baru
 };
 
 /**
- * STATE MANAGEMENT MODULAR
+ * STATE MANAGEMENT
  */
 const appState = {
     data: { regular: [], shorts: [], live: [] },
@@ -73,33 +78,46 @@ function formatNumber(num) {
 }
 
 /**
- * PENGAMBILAN DATA API
+ * PENGAMBILAN DATA API DENGAN CACHING
  */
 async function fetchYouTubeVideos() {
-    try {
-        const res = await fetch(`${CONFIG.BASE_URL}?key=${CONFIG.API_KEY}&channelId=${CONFIG.CHANNEL_ID}&part=snippet,id&order=date&maxResults=${CONFIG.MAX_RESULTS}`);
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        
-        let videos = data.items.filter(item => item.id.kind === 'youtube#video');
-
-        if (videos.length > 0) {
-            const videoIds = videos.map(v => v.id.videoId).join(',');
-            const statsRes = await fetch(`${CONFIG.VIDEO_URL}?key=${CONFIG.API_KEY}&id=${videoIds}&part=statistics`);
-            const statsData = await statsRes.json();
-            
-            const statsMap = {};
-            statsData.items.forEach(item => { statsMap[item.id] = item.statistics; });
-
-            videos = videos.map(video => ({
-                ...video,
-                statistics: statsMap[video.id.videoId] || { viewCount: 0, likeCount: 0, commentCount: 0 }
-            }));
+    // 1. Cek Cache
+    const cachedData = localStorage.getItem(CONFIG.CACHE_KEY);
+    if (cachedData) {
+        const parsed = JSON.parse(cachedData);
+        if (Date.now() - parsed.timestamp < CONFIG.CACHE_DURATION) {
+            return parsed.data;
         }
-        return videos;
-    } catch (error) {
-        throw error;
     }
+
+    // 2. Fetch API jika cache kosong/kedaluwarsa
+    const res = await fetch(`${CONFIG.BASE_URL}?key=${CONFIG.API_KEY}&channelId=${CONFIG.CHANNEL_ID}&part=snippet,id&order=date&maxResults=${CONFIG.MAX_RESULTS}`);
+    if (!res.ok) throw new Error('API Request Failed');
+    const data = await res.json();
+    
+    let videos = data.items.filter(item => item.id.kind === 'youtube#video');
+
+    if (videos.length > 0) {
+        const videoIds = videos.map(v => v.id.videoId).join(',');
+        const statsRes = await fetch(`${CONFIG.VIDEO_URL}?key=${CONFIG.API_KEY}&id=${videoIds}&part=statistics`);
+        const statsData = await statsRes.json();
+        
+        const statsMap = {};
+        statsData.items.forEach(item => { statsMap[item.id] = item.statistics; });
+
+        videos = videos.map(video => ({
+            ...video,
+            statistics: statsMap[video.id.videoId] || { viewCount: 0, likeCount: 0, commentCount: 0 }
+        }));
+    }
+
+    // 3. Simpan ke LocalStorage
+    localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({
+        timestamp: Date.now(),
+        data: videos
+    }));
+
+    return videos;
 }
 
 /**
@@ -120,9 +138,9 @@ function generateCardHTML(video) {
                     <div class="card-footer-info">
                         <span class="video-meta-tag">DROP: ${formatDate(publishedAt)}</span>
                         <div class="video-stats">
-                            <span title="Views">👁️ ${views}</span>
-                            <span title="Likes">👍 ${likes}</span>
-                            <span title="Comments">💬 ${comments}</span>
+                            <span>👁️ ${views}</span>
+                            <span>👍 ${likes}</span>
+                            <span>💬 ${comments}</span>
                         </div>
                     </div>
                 </div>
@@ -137,37 +155,50 @@ function renderCategory(categoryKey, gridElement) {
     const videosToDisplay = videos.slice(0, currentLimit);
     
     if (videos.length === 0) {
-        gridElement.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 2rem;"><p>NO DATA YET IN THIS SECTOR.</p></div>`;
+        gridElement.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 2rem;"><p>NO DATA YET.</p></div>`;
         return;
     }
     
     gridElement.innerHTML = videosToDisplay.map(generateCardHTML).join('');
 
     let container = gridElement.nextElementSibling;
-    if (container && container.classList.contains('load-more-container')) {
-        container.remove();
-    }
+    if (container && container.classList.contains('load-more-container')) container.remove();
 
     if (currentLimit < videos.length) {
         const btnContainer = document.createElement('div');
         btnContainer.className = 'load-more-container';
-        
         const btn = document.createElement('button');
         btn.className = 'load-more-btn';
         btn.innerText = 'TAMPILKAN LEBIH BANYAK';
         btn.onclick = () => {
-            // Ditambah dinamis sesuai kategori masing-masing (+3 atau +5)
             appState.displayCount[categoryKey] += CONFIG.ITEMS_PER_PAGE[categoryKey];
             renderCategory(categoryKey, gridElement);
         };
-        
         btnContainer.appendChild(btn);
         gridElement.parentNode.insertBefore(btnContainer, gridElement.nextSibling);
     }
 }
 
 /**
- * INISIALISASI GALERI
+ * FUNGSI REFRESH DATA MANUAL
+ */
+function forceRefreshData() {
+    // 1. Hapus cache di LocalStorage
+    localStorage.removeItem(CONFIG.CACHE_KEY);
+    
+    // 2. Reset tampilan batas item per halaman
+    appState.displayCount = { 
+        regular: CONFIG.ITEMS_PER_PAGE.regular, 
+        shorts: CONFIG.ITEMS_PER_PAGE.shorts, 
+        live: CONFIG.ITEMS_PER_PAGE.live 
+    };
+    
+    // 3. Panggil ulang fungsi fetch/inisialisasi
+    initGallery();
+}
+
+/**
+ * INISIALISASI
  */
 async function initGallery() {
     uiState.showLoading();
@@ -175,11 +206,6 @@ async function initGallery() {
         const videos = await fetchYouTubeVideos();
         
         appState.data = { regular: [], shorts: [], live: [] };
-        appState.displayCount = { 
-            regular: CONFIG.ITEMS_PER_PAGE.regular, 
-            shorts: CONFIG.ITEMS_PER_PAGE.shorts, 
-            live: CONFIG.ITEMS_PER_PAGE.live 
-        };
         
         videos.forEach(video => {
             const isLive = ['live', 'upcoming', 'completed'].includes(video.snippet.liveBroadcastContent);
@@ -200,27 +226,15 @@ async function initGallery() {
     }
 }
 
-/**
- * LOGIKA BACK TO TOP
- */
-function handleScroll() {
-    if (window.scrollY > 400) {
-        DOM.backToTopBtn.classList.add('visible');
-    } else {
-        DOM.backToTopBtn.classList.remove('visible');
-    }
-}
-
-DOM.backToTopBtn.addEventListener('click', () => {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-});
-
-/**
- * EVENT LISTENERS
- */
+// Event Listeners
 document.addEventListener('DOMContentLoaded', initGallery);
-window.addEventListener('scroll', handleScroll);
+window.addEventListener('scroll', () => {
+    DOM.backToTopBtn.classList.toggle('visible', window.scrollY > 400);
+});
+DOM.backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 DOM.retryBtn.addEventListener('click', initGallery);
+
+// Event Listener untuk Tombol Refresh
+if (DOM.refreshBtn) {
+    DOM.refreshBtn.addEventListener('click', forceRefreshData);
+}
