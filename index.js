@@ -5,7 +5,11 @@ const CONFIG = {
     API_KEY: 'AIzaSyApCVwvjgWTZgyRPUaz_ymIpujS6afCjjw', 
     CHANNEL_ID: 'UCb6kJDbtnvyl8YtQmRnecfg',
     MAX_RESULTS: 50, 
-    ITEMS_PER_PAGE: 4, // Jumlah awal video yang dimuat per kategori
+    ITEMS_PER_PAGE: {
+        regular: 3,
+        shorts: 5,
+        live: 3
+    },
     BASE_URL: 'https://www.googleapis.com/youtube/v3/search',
     VIDEO_URL: 'https://www.googleapis.com/youtube/v3/videos'
 };
@@ -29,7 +33,11 @@ const DOM = {
  */
 const appState = {
     data: { regular: [], shorts: [], live: [] },
-    displayCount: { regular: CONFIG.ITEMS_PER_PAGE, shorts: CONFIG.ITEMS_PER_PAGE, live: CONFIG.ITEMS_PER_PAGE }
+    displayCount: { 
+        regular: CONFIG.ITEMS_PER_PAGE.regular, 
+        shorts: CONFIG.ITEMS_PER_PAGE.shorts, 
+        live: CONFIG.ITEMS_PER_PAGE.live 
+    }
 };
 
 const uiState = {
@@ -69,14 +77,12 @@ function formatNumber(num) {
  */
 async function fetchYouTubeVideos() {
     try {
-        // 1. Ambil daftar video
         const res = await fetch(`${CONFIG.BASE_URL}?key=${CONFIG.API_KEY}&channelId=${CONFIG.CHANNEL_ID}&part=snippet,id&order=date&maxResults=${CONFIG.MAX_RESULTS}`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         
         let videos = data.items.filter(item => item.id.kind === 'youtube#video');
 
-        // 2. Ambil statistik lengkap (termasuk komentar) berdasarkan ID video
         if (videos.length > 0) {
             const videoIds = videos.map(v => v.id.videoId).join(',');
             const statsRes = await fetch(`${CONFIG.VIDEO_URL}?key=${CONFIG.API_KEY}&id=${videoIds}&part=statistics`);
@@ -85,7 +91,6 @@ async function fetchYouTubeVideos() {
             const statsMap = {};
             statsData.items.forEach(item => { statsMap[item.id] = item.statistics; });
 
-            // Gabungkan data statistik ke dalam objek video
             videos = videos.map(video => ({
                 ...video,
                 statistics: statsMap[video.id.videoId] || { viewCount: 0, likeCount: 0, commentCount: 0 }
@@ -138,13 +143,11 @@ function renderCategory(categoryKey, gridElement) {
     
     gridElement.innerHTML = videosToDisplay.map(generateCardHTML).join('');
 
-    // Hapus tombol Load More sebelumnya jika ada agar tidak ganda
     let container = gridElement.nextElementSibling;
     if (container && container.classList.contains('load-more-container')) {
         container.remove();
     }
 
-    // Tambahkan tombol Load More jika masih ada sisa video yang belum dirender
     if (currentLimit < videos.length) {
         const btnContainer = document.createElement('div');
         btnContainer.className = 'load-more-container';
@@ -153,7 +156,8 @@ function renderCategory(categoryKey, gridElement) {
         btn.className = 'load-more-btn';
         btn.innerText = 'TAMPILKAN LEBIH BANYAK';
         btn.onclick = () => {
-            appState.displayCount[categoryKey] += CONFIG.ITEMS_PER_PAGE;
+            // Ditambah dinamis sesuai kategori masing-masing (+3 atau +5)
+            appState.displayCount[categoryKey] += CONFIG.ITEMS_PER_PAGE[categoryKey];
             renderCategory(categoryKey, gridElement);
         };
         
@@ -170,9 +174,12 @@ async function initGallery() {
     try {
         const videos = await fetchYouTubeVideos();
         
-        // Reset state data dan hitungan render
         appState.data = { regular: [], shorts: [], live: [] };
-        appState.displayCount = { regular: CONFIG.ITEMS_PER_PAGE, shorts: CONFIG.ITEMS_PER_PAGE, live: CONFIG.ITEMS_PER_PAGE };
+        appState.displayCount = { 
+            regular: CONFIG.ITEMS_PER_PAGE.regular, 
+            shorts: CONFIG.ITEMS_PER_PAGE.shorts, 
+            live: CONFIG.ITEMS_PER_PAGE.live 
+        };
         
         videos.forEach(video => {
             const isLive = ['live', 'upcoming', 'completed'].includes(video.snippet.liveBroadcastContent);
