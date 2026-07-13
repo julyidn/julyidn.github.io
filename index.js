@@ -30,7 +30,9 @@ const DOM = {
     errorState: document.getElementById('error-state'),
     retryBtn: document.getElementById('retry-btn'),
     backToTopBtn: document.getElementById('back-to-top'),
-    refreshBtn: document.getElementById('refresh-btn') // Elemen baru
+    refreshBtn: document.getElementById('refresh-btn'),
+    searchInput: document.getElementById('search-input'),
+    sortSelect: document.getElementById('sort-select')
 };
 
 /**
@@ -42,14 +44,15 @@ const appState = {
         regular: CONFIG.ITEMS_PER_PAGE.regular, 
         shorts: CONFIG.ITEMS_PER_PAGE.shorts, 
         live: CONFIG.ITEMS_PER_PAGE.live 
-    }
+    },
+    nextPageToken: null 
 };
 
 const uiState = {
     showLoading: () => {
         DOM.loadingState.hidden = false;
         DOM.errorState.hidden = true;
-        DOM.gallerySections.hidden = true;
+        if (appState.data.regular.length === 0) DOM.gallerySections.hidden = true;
     },
     showError: () => {
         DOM.loadingState.hidden = true;
@@ -78,23 +81,42 @@ function formatNumber(num) {
 }
 
 /**
- * PENGAMBILAN DATA API DENGAN CACHING
+ * MANAJEMEN CACHE
  */
-async function fetchYouTubeVideos() {
-    // 1. Cek Cache
+function saveToCache() {
+    localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({
+        timestamp: Date.now(),
+        data: appState.data,
+        nextPageToken: appState.nextPageToken
+    }));
+}
+
+function loadFromCache() {
     const cachedData = localStorage.getItem(CONFIG.CACHE_KEY);
     if (cachedData) {
         const parsed = JSON.parse(cachedData);
         if (Date.now() - parsed.timestamp < CONFIG.CACHE_DURATION) {
-            return parsed.data;
+            appState.data = parsed.data;
+            appState.nextPageToken = parsed.nextPageToken;
+            return true;
         }
     }
+    return false;
+}
 
-    // 2. Fetch API jika cache kosong/kedaluwarsa
-    const res = await fetch(`${CONFIG.BASE_URL}?key=${CONFIG.API_KEY}&channelId=${CONFIG.CHANNEL_ID}&part=snippet,id&order=date&maxResults=${CONFIG.MAX_RESULTS}`);
+/**
+ * PENGAMBILAN DATA API DENGAN PAGINATION (NEXT PAGE TOKEN)
+ */
+async function fetchAndCategorizeVideos(pageToken = '') {
+    const pageTokenParam = pageToken ? `&pageToken=${pageToken}` : '';
+    const res = await fetch(`${CONFIG.BASE_URL}?key=${CONFIG.API_KEY}&channelId=${CONFIG.CHANNEL_ID}&part=snippet,id&order=date&maxResults=${CONFIG.MAX_RESULTS}${pageTokenParam}`);
+    
     if (!res.ok) throw new Error('API Request Failed');
     const data = await res.json();
     
+    // Simpan token halaman berikutnya
+    appState.nextPageToken = data.nextPageToken || null;
+
     let videos = data.items.filter(item => item.id.kind === 'youtube#video');
 
     if (videos.length > 0) {
@@ -105,23 +127,25 @@ async function fetchYouTubeVideos() {
         const statsMap = {};
         statsData.items.forEach(item => { statsMap[item.id] = item.statistics; });
 
-        videos = videos.map(video => ({
-            ...video,
-            statistics: statsMap[video.id.videoId] || { viewCount: 0, likeCount: 0, commentCount: 0 }
-        }));
+        // Kategorisasi data baru dan masukkan ke state aplikasi
+        videos.forEach(video => {
+            video.statistics = statsMap[video.id.videoId] || { viewCount: 0, likeCount: 0, commentCount: 0 };
+            
+            const isLive = ['live', 'upcoming', 'completed'].includes(video.snippet.liveBroadcastContent);
+            const isShorts = video.snippet.title.toLowerCase().includes('#shorts') || video.snippet.description.toLowerCase().includes('#shorts');
+
+            if (isLive) appState.data.live.push(video);
+            else if (isShorts) appState.data.shorts.push(video);
+            else appState.data.regular.push(video);
+        });
     }
 
-    // 3. Simpan ke LocalStorage
-    localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({
-        timestamp: Date.now(),
-        data: videos
-    }));
-
-    return videos;
+    // Perbarui cache dengan data terkini
+    saveToCache();
 }
 
 /**
- * RENDERING UI & LOGIKA LOAD MORE
+ * RENDERING UI DENGAN DUKUNGAN INPUT PENCARIAN & FILTER DROPDOWN
  */
 function generateCardHTML(video) {
     const { title, publishedAt, thumbnails } = video.snippet;
@@ -138,7 +162,7 @@ function generateCardHTML(video) {
                     <div class="card-footer-info">
                         <span class="video-meta-tag">DROP: ${formatDate(publishedAt)}</span>
                         <div class="video-stats">
-                            <span>👁️ ${views}</span>
+                            <span>👁 ${views}</span>
                             <span>👍 ${likes}</span>
                             <span>💬 ${comments}</span>
                         </div>
@@ -150,91 +174,139 @@ function generateCardHTML(video) {
 }
 
 function renderCategory(categoryKey, gridElement) {
-    const videos = appState.data[categoryKey];
+    // Gandakan array data agar manipulasi filter/sort tidak merusak data dasar asal
+    let videos = [...appState.data[categoryKey]];
+
+    // 1. Logika Fitur Pencarian (Search Bar)
+    const searchQuery = DOM.searchInput.value.toLowerCase().trim();
+    if (searchQuery) {
+        videos = videos.filter(video => 
+            video.snippet.title.toLowerCase().includes(searchQuery) ||
+            video.snippet.description.toLowerCase().includes(searchQuery)
+        );
+    }
+
+    // 2. Logika Filter & Sorting Dropdown
+    const sortValue = DOM.sortSelect.value;
+    videos.sort((a, b) => {
+        if (sortValue === 'popular') {
+            return parseInt(b.statistics.viewCount || 0) - parseInt(a.statistics.viewCount || 0);
+        } else if (sortValue === 'liked') {
+            return parseInt(b.statistics.likeCount || 0) - parseInt(a.statistics.likeCount || 0);
+        } else if (sortValue === 'oldest') {
+            return new Date(a.snippet.publishedAt) - new Date(b.snippet.publishedAt);
+        } else { // 'newest'
+            return new Date(b.snippet.publishedAt) - new Date(a.snippet.publishedAt);
+        }
+    });
+
     const currentLimit = appState.displayCount[categoryKey];
     const videosToDisplay = videos.slice(0, currentLimit);
     
+    // Tampilkan pesan kosong jika tidak ada arsip video yang cocok
     if (videos.length === 0) {
-        gridElement.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 2rem;"><p>NO DATA YET.</p></div>`;
+        gridElement.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 2rem; font-weight: bold;"><p>TIDAK ADA KONTEN YANG COCOK.</p></div>`;
+        let container = gridElement.nextElementSibling;
+        if (container && container.classList.contains('load-more-container')) container.remove();
         return;
     }
     
     gridElement.innerHTML = videosToDisplay.map(generateCardHTML).join('');
 
+    // Hapus tombol load more lama sebelum menggambar elemen baru
     let container = gridElement.nextElementSibling;
     if (container && container.classList.contains('load-more-container')) container.remove();
 
-    if (currentLimit < videos.length) {
+    // Sediakan tombol Load More jika limit tampilan lokal belum habis atau server masih memegang page token
+    if (currentLimit < videos.length || appState.nextPageToken) {
         const btnContainer = document.createElement('div');
         btnContainer.className = 'load-more-container';
         const btn = document.createElement('button');
         btn.className = 'load-more-btn';
         btn.innerText = 'TAMPILKAN LEBIH BANYAK';
-        btn.onclick = () => {
+        
+        btn.onclick = async () => {
             appState.displayCount[categoryKey] += CONFIG.ITEMS_PER_PAGE[categoryKey];
+            
+            // Lakukan pemanggilan data baru ke server jika data terfilter lokal habis tetapi token halaman API aktif
+            if (appState.displayCount[categoryKey] > videos.length && appState.nextPageToken) {
+                btn.innerText = 'MEMUAT DARI SERVER...';
+                btn.disabled = true;
+                try {
+                    await fetchAndCategorizeVideos(appState.nextPageToken);
+                } catch (error) {
+                    console.error("Gagal mengambil data halaman berikutnya:", error);
+                    alert("Gagal memuat video baru dari server. Silakan coba lagi.");
+                    appState.displayCount[categoryKey] -= CONFIG.ITEMS_PER_PAGE[categoryKey]; // Rollback
+                    btn.innerText = 'TAMPILKAN LEBIH BANYAK';
+                    btn.disabled = false;
+                    return;
+                }
+            }
             renderCategory(categoryKey, gridElement);
         };
+        
         btnContainer.appendChild(btn);
         gridElement.parentNode.insertBefore(btnContainer, gridElement.nextSibling);
     }
 }
 
 /**
+ * FUNGSI BANTUAN RENDER SEMUA GRID
+ */
+function renderAllCategories() {
+    renderCategory('regular', DOM.videoGrid);
+    renderCategory('shorts', DOM.shortsGrid);
+    renderCategory('live', DOM.liveGrid);
+}
+
+/**
  * FUNGSI REFRESH DATA MANUAL
  */
 function forceRefreshData() {
-    // 1. Hapus cache di LocalStorage
     localStorage.removeItem(CONFIG.CACHE_KEY);
     
-    // 2. Reset tampilan batas item per halaman
+    appState.data = { regular: [], shorts: [], live: [] };
+    appState.nextPageToken = null;
     appState.displayCount = { 
         regular: CONFIG.ITEMS_PER_PAGE.regular, 
         shorts: CONFIG.ITEMS_PER_PAGE.shorts, 
         live: CONFIG.ITEMS_PER_PAGE.live 
     };
     
-    // 3. Panggil ulang fungsi fetch/inisialisasi
+    if (DOM.searchInput) DOM.searchInput.value = '';
+    if (DOM.sortSelect) DOM.sortSelect.value = 'newest';
+    
     initGallery();
 }
 
 /**
- * INISIALISASI
+ * INISIALISASI UTAMA
  */
 async function initGallery() {
     uiState.showLoading();
     try {
-        const videos = await fetchYouTubeVideos();
+        if (!loadFromCache()) {
+            await fetchAndCategorizeVideos('');
+        }
         
-        appState.data = { regular: [], shorts: [], live: [] };
-        
-        videos.forEach(video => {
-            const isLive = ['live', 'upcoming', 'completed'].includes(video.snippet.liveBroadcastContent);
-            const isShorts = video.snippet.title.toLowerCase().includes('#shorts') || video.snippet.description.toLowerCase().includes('#shorts');
-
-            if (isLive) appState.data.live.push(video);
-            else if (isShorts) appState.data.shorts.push(video);
-            else appState.data.regular.push(video);
-        });
-
-        renderCategory('regular', DOM.videoGrid);
-        renderCategory('shorts', DOM.shortsGrid);
-        renderCategory('live', DOM.liveGrid);
-
+        renderAllCategories();
         uiState.showSuccess();
     } catch (error) {
+        console.error(error);
         uiState.showError();
     }
 }
 
-// Event Listeners
+// Pasang Event Listeners untuk Interaksi Pengguna (Search & Dropdown)
+if (DOM.searchInput) DOM.searchInput.addEventListener('input', renderAllCategories);
+if (DOM.sortSelect) DOM.sortSelect.addEventListener('change', renderAllCategories);
+
+// Event Listeners Global Aplikasi
 document.addEventListener('DOMContentLoaded', initGallery);
 window.addEventListener('scroll', () => {
     DOM.backToTopBtn.classList.toggle('visible', window.scrollY > 400);
 });
-DOM.backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-DOM.retryBtn.addEventListener('click', initGallery);
-
-// Event Listener untuk Tombol Refresh
-if (DOM.refreshBtn) {
-    DOM.refreshBtn.addEventListener('click', forceRefreshData);
-}
+if (DOM.backToTopBtn) DOM.backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+if (DOM.retryBtn) DOM.retryBtn.addEventListener('click', forceRefreshData);
+if (DOM.refreshBtn) DOM.refreshBtn.addEventListener('click', forceRefreshData);
