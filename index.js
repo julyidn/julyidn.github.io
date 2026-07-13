@@ -1,18 +1,219 @@
-const _0x4d2a=['getElementById','gallery-sections','video-grid','shorts-grid','live-grid','loading-state','error-state','retry-btn','hidden','toLocaleDateString','id-ID','items','youtube#video','videoId','statistics','snippet','high','url','medium','innerHTML','classList','contains','load-more-container','remove','createElement','className','load-more-btn','innerText','TAMPILKAN\x20LEBIH\x20BANYAK','onclick','appendChild','parentNode','insertBefore','nextSibling','liveBroadcastContent','toLowerCase','#shorts','includes','push','addEventListener','DOMContentLoaded','click','back-to-top','visible','scrollY','scrollTo'];(function(_0x1b8c19,_0x4d2a3e){const _0x3b8d5a=function(_0x2e06f9){while(--_0x2e06f9){_0x1b8c19['push'](_0x1b8c19['shift']());}};_0x3b8d5a(++_0x4d2a3e);}(_0x4d2a,0x1a8));const _0x2f1c=function(_0x1b8c19,_0x4d2a3e){_0x1b8c19=_0x1b8c19-0x0;let _0x3b8d5a=_0x4d2a[_0x1b8c19];return _0x3b8d5a;};const CONFIG={'API_KEY':'AIzaSyApCVwvjgWTZgyRPUaz_ymIpujS6afCjjw','CHANNEL_ID':'UCb6kJDbtnvyl8YtQmRnecfg','MAX_RESULTS':0x32,'ITEMS_PER_PAGE':0x4,'BASE_URL':'https://www.googleapis.com/youtube/v3/search','VIDEO_URL':'https://www.googleapis.com/youtube/v3/videos'};const DOM={'gallerySections':document[_0x2f1c('0x0')](_0x2f1c('0x1')),'videoGrid':document[_0x2f1c('0x0')](_0x2f1c('0x2')),'shortsGrid':document[_0x2f1c('0x0')](_0x2f1c('0x3')),'liveGrid':document[_0x2f1c('0x0')](_0x2f1c('0x4')),'loadingState':document[_0x2f1c('0x0')](_0x2f1c('0x5')),'errorState':document[_0x2f1c('0x0')](_0x2f1c('0x6')),'retryBtn':document[_0x2f1c('0x0')](_0x2f1c('0x7')),'backToTopBtn':document[_0x2f1c('0x0')](_0x2f1c('0x2a'))};const appState={'data':{'regular':[],'shorts':[],'live':[]},'displayCount':{'regular':CONFIG['ITEMS_PER_PAGE'],'shorts':CONFIG['ITEMS_PER_PAGE'],'live':CONFIG['ITEMS_PER_PAGE']}};const uiState={'showLoading':()=>{DOM['loadingState'][_0x2f1c('0x8')]=!0x1;DOM['errorState'][_0x2f1c('0x8')]=!0x0;DOM['gallerySections'][_0x2f1c('0x8')]=!0x0;},'showError':()=>{DOM['loadingState'][_0x2f1c('0x8')]=!0x0;DOM['errorState'][_0x2f1c('0x8')]=!0x1;DOM['gallerySections'][_0x2f1c('0x8')]=!0x0;},'showSuccess':()=>{DOM['loadingState'][_0x2f1c('0x8')]=!0x0;DOM['errorState'][_0x2f1c('0x8')]=!0x0;DOM['gallerySections'][_0x2f1c('0x8')]=!0x1;}};function formatDate(_0x5c8e37){return new Date(_0x5c8e37)[_0x2f1c('0x9')](_0x2f1c('0xa'),{'day':'2-digit','month':'short','year':'numeric'});}function formatNumber(_0x4b7f2e){if(!_0x4b7f2e)return'0';if(_0x4b7f2e>=0xf4240)return(_0x4b7f2e/0xf4240)['toFixed'](0x1)['replace'](/\.0$/,'')+'M';if(_0x4b7f2e>=0x3e8)return(_0x4b7f2e/0x3e8)['toFixed'](0x1)['replace'](/\.0$/,'')+'K';return _0x4b7f2e;}async function fetchYouTubeVideos(){try{const _0x1c1e54=await fetch(`${CONFIG['BASE_URL']}?key=${CONFIG['API_KEY']}&channelId=${CONFIG['CHANNEL_ID']}&part=snippet,id&order=date&maxResults=${CONFIG['MAX_RESULTS']}`);if(!_0x1c1e54['ok'])throw new Error();const _0x4c2b9a=await _0x1c1e54['json']();let _0x3b8d5a=_0x4c2b9a[_0x2f1c('0xb')]['filter'](_0x39a19c=>_0x39a19c['id']['kind']===_0x2f1c('0xc'));if(_0x3b8d5a['length']>0x0){const _0x2e06f9=_0x3b8d5a['map'](_0x1a7f45=>_0x1a7f45['id'][_0x2f1c('0xd')])['join'](',');const _0x4e6b5c=await fetch(`${CONFIG['VIDEO_URL']}?key=${CONFIG['API_KEY']}&id=${_0x2e06f9}&part=statistics`);const _0x5a1b3c=await _0x4e6b5c['json']();const _0x2c1a8d={};_0x5a1b3c[_0x2f1c('0xb')]['forEach'](_0x1b8c19=>{_0x2c1a8d[_0x1b8c19['id']]=_0x1b8c19[_0x2f1c('0xe')];});_0x3b8d5a=_0x3b8d5a['map'](_0x4d2a3e=>({..._0x4d2a3e,'statistics':_0x2c1a8d[_0x4d2a3e['id'][_0x2f1c('0xd')]]||{'viewCount':0x0,'likeCount':0x0,'commentCount':0x0}}));}return _0x3b8d5a;}catch(_0x2e06f9){throw _0x2e06f9;}}function generateCardHTML(_0x5c8e37){const{'title':_0x4b7f2e,'publishedAt':_0x1c1e54,'thumbnails':_0x4c2b9a}=_0x5c8e37[_0x2f1c('0xf')];const _0x3b8d5a=formatNumber(_0x5c8e37[_0x2f1c('0xe')]['viewCount']);const _0x39a19c=formatNumber(_0x5c8e37[_0x2f1c('0xe')]['likeCount']);const _0x1a7f45=formatNumber(_0x5c8e37[_0x2f1c('0xe')]['commentCount']);return`
+/**
+ * KONFIGURASI APLIKASI
+ */
+const CONFIG = {
+    API_KEY: 'AIzaSyApCVwvjgWTZgyRPUaz_ymIpujS6afCjjw', 
+    CHANNEL_ID: 'UCb6kJDbtnvyl8YtQmRnecfg',
+    MAX_RESULTS: 50, 
+    ITEMS_PER_PAGE: 4, // Jumlah awal video yang dimuat per kategori
+    BASE_URL: 'https://www.googleapis.com/youtube/v3/search',
+    VIDEO_URL: 'https://www.googleapis.com/youtube/v3/videos'
+};
+
+/**
+ * REFERENSI ELEMEN DOM
+ */
+const DOM = {
+    gallerySections: document.getElementById('gallery-sections'),
+    videoGrid: document.getElementById('video-grid'),
+    shortsGrid: document.getElementById('shorts-grid'),
+    liveGrid: document.getElementById('live-grid'),
+    loadingState: document.getElementById('loading-state'),
+    errorState: document.getElementById('error-state'),
+    retryBtn: document.getElementById('retry-btn'),
+    backToTopBtn: document.getElementById('back-to-top')
+};
+
+/**
+ * STATE MANAGEMENT MODULAR
+ */
+const appState = {
+    data: { regular: [], shorts: [], live: [] },
+    displayCount: { regular: CONFIG.ITEMS_PER_PAGE, shorts: CONFIG.ITEMS_PER_PAGE, live: CONFIG.ITEMS_PER_PAGE }
+};
+
+const uiState = {
+    showLoading: () => {
+        DOM.loadingState.hidden = false;
+        DOM.errorState.hidden = true;
+        DOM.gallerySections.hidden = true;
+    },
+    showError: () => {
+        DOM.loadingState.hidden = true;
+        DOM.errorState.hidden = false;
+        DOM.gallerySections.hidden = true;
+    },
+    showSuccess: () => {
+        DOM.loadingState.hidden = true;
+        DOM.errorState.hidden = true;
+        DOM.gallerySections.hidden = false;
+    }
+};
+
+/**
+ * FORMATTER BANTUAN
+ */
+function formatDate(isoDateString) {
+    return new Date(isoDateString).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function formatNumber(num) {
+    if (!num) return '0';
+    if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return num;
+}
+
+/**
+ * PENGAMBILAN DATA API
+ */
+async function fetchYouTubeVideos() {
+    try {
+        // 1. Ambil daftar video
+        const res = await fetch(`${CONFIG.BASE_URL}?key=${CONFIG.API_KEY}&channelId=${CONFIG.CHANNEL_ID}&part=snippet,id&order=date&maxResults=${CONFIG.MAX_RESULTS}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        
+        let videos = data.items.filter(item => item.id.kind === 'youtube#video');
+
+        // 2. Ambil statistik lengkap (termasuk komentar) berdasarkan ID video
+        if (videos.length > 0) {
+            const videoIds = videos.map(v => v.id.videoId).join(',');
+            const statsRes = await fetch(`${CONFIG.VIDEO_URL}?key=${CONFIG.API_KEY}&id=${videoIds}&part=statistics`);
+            const statsData = await statsRes.json();
+            
+            const statsMap = {};
+            statsData.items.forEach(item => { statsMap[item.id] = item.statistics; });
+
+            // Gabungkan data statistik ke dalam objek video
+            videos = videos.map(video => ({
+                ...video,
+                statistics: statsMap[video.id.videoId] || { viewCount: 0, likeCount: 0, commentCount: 0 }
+            }));
+        }
+        return videos;
+    } catch (error) {
+        throw error;
+    }
+}
+
+/**
+ * RENDERING UI & LOGIKA LOAD MORE
+ */
+function generateCardHTML(video) {
+    const { title, publishedAt, thumbnails } = video.snippet;
+    const views = formatNumber(video.statistics.viewCount);
+    const likes = formatNumber(video.statistics.likeCount);
+    const comments = formatNumber(video.statistics.commentCount);
+
+    return `
         <article class="video-card">
-            <a href="https://www.youtube.com/watch?v=${_0x5c8e37['id'][_0x2f1c('0xd')]}" target="_blank" class="video-link">
-                <img src="${_0x4c2b9a[_0x2f1c('0x10')]?_0x4c2b9a[_0x2f1c('0x10')][_0x2f1c('0x11')]:_0x4c2b9a[_0x2f1c('0x12')][_0x2f1c('0x11')]}" alt="${_0x4b7f2e}" loading="lazy">
+            <a href="https://www.youtube.com/watch?v=${video.id.videoId}" target="_blank" class="video-link">
+                <img src="${thumbnails.high ? thumbnails.high.url : thumbnails.medium.url}" alt="${title}" loading="lazy">
                 <div class="card-content">
-                    <h2 title="${_0x4b7f2e}">${_0x4b7f2e}</h2>
+                    <h2 title="${title}">${title}</h2>
                     <div class="card-footer-info">
-                        <span class="video-meta-tag">DROP: ${formatDate(_0x1c1e54)}</span>
+                        <span class="video-meta-tag">DROP: ${formatDate(publishedAt)}</span>
                         <div class="video-stats">
-                            <span title="Views">👁️ ${_0x3b8d5a}</span>
-                            <span title="Likes">👍 ${_0x39a19c}</span>
-                            <span title="Comments">💬 ${_0x1a7f45}</span>
+                            <span title="Views">👁️ ${views}</span>
+                            <span title="Likes">👍 ${likes}</span>
+                            <span title="Comments">💬 ${comments}</span>
                         </div>
                     </div>
                 </div>
             </a>
         </article>
-    `;}function renderCategory(_0x4b7f2e,_0x1c1e54){const _0x4c2b9a=appState['data'][_0x4b7f2e];const _0x3b8d5a=appState['displayCount'][_0x4b7f2e];const _0x39a19c=_0x4c2b9a['slice'](0x0,_0x3b8d5a);if(_0x4c2b9a['length']===0x0){_0x1c1e54[_0x2f1c('0x13')]=`<div style="grid-column: 1/-1; text-align: center; padding: 2rem;"><p>NO DATA YET IN THIS SECTOR.</p></div>`;return;}_0x1c1e54[_0x2f1c('0x13')]=_0x39a19c['map'](generateCardHTML)['join']('');let _0x1a7f45=_0x1c1e54['nextElementSibling'];if(_0x1a7f45&&_0x1a7f45[_0x2f1c('0x14')][_0x2f1c('0x15')](_0x2f1c('0x16'))){_0x1a7f45[_0x2f1c('0x17')]();}if(_0x3b8d5a<_0x4c2b9a['length']){const _0x2e06f9=document[_0x2f1c('0x18')]('div');_0x2e06f9[_0x2f1c('0x19')]=_0x2f1c('0x16');const _0x4e6b5c=document[_0x2f1c('0x18')]('button');_0x4e6b5c[_0x2f1c('0x19')]=_0x2f1c('0x1a');_0x4e6b5c[_0x2f1c('0x1b')]=_0x2f1c('0x1c');_0x4e6b5c[_0x2f1c('0x1d')]=()=>{appState['displayCount'][_0x4b7f2e]+=CONFIG['ITEMS_PER_PAGE'];renderCategory(_0x4b7f2e,_0x1c1e54);};_0x2e06f9[_0x2f1c('0x1e')](_0x4e6b5c);_0x1c1e54[_0x2f1c('0x1f')][_0x2f1c('0x20')](_0x2e06f9,_0x1c1e54[_0x2f1c('0x21')]);}}async function initGallery(){uiState['showLoading']();try{const _0x5c8e37=await fetchYouTubeVideos();appState['data']={'regular':[],'shorts':[],'live':[]};_0x5c8e37['forEach'](_0x4b7f2e=>{const _0x1c1e54=['live','upcoming','completed'][_0x2f1c('0x25')](_0x4b7f2e[_0x2f1c('0xf')][_0x2f1c('0x22')]);const _0x4c2b9a=_0x4b7f2e[_0x2f1c('0xf')]['title'][_0x2f1c('0x23')]()['includes'](_0x2f1c('0x24'))||_0x4b7f2e[_0x2f1c('0xf')]['description'][_0x2f1c('0x23')]()['includes'](_0x2f1c('0x24'));if(_0x1c1e54)appState['data']['live'][_0x2f1c('0x26')](_0x4b7f2e);else if(_0x4c2b9a)appState['data']['shorts'][_0x2f1c('0x26')](_0x4b7f2e);else appState['data']['regular'][_0x2f1c('0x26')](_0x4b7f2e);});renderCategory('regular',DOM['videoGrid']);renderCategory('shorts',DOM['shortsGrid']);renderCategory('live',DOM['liveGrid']);uiState['showSuccess']();}catch(_0x4b7f2e){uiState['showError']();}}function handleScroll(){if(window[_0x2f1c('0x2c')]>0x190){DOM['backToTopBtn']['classList']['add'](_0x2f1c('0x2b'));}else{DOM['backToTopBtn']['classList']['remove'](_0x2f1c('0x2b'));}}DOM['backToTopBtn'][_0x2f1c('0x27')](_0x2f1c('0x29'),()=>{window[_0x2f1c('0x2d')]({'top':0x0,'behavior':'smooth'});});document[_0x2f1c('0x27')](_0x2f1c('0x28'),initGallery);window[_0x2f1c('0x27')]('scroll',handleScroll);DOM['retryBtn'][_0x2f1c('0x27')](_0x2f1c('0x29'),initGallery);
+    `;
+}
+
+function renderCategory(categoryKey, gridElement) {
+    const videos = appState.data[categoryKey];
+    const currentLimit = appState.displayCount[categoryKey];
+    const videosToDisplay = videos.slice(0, currentLimit);
+    
+    if (videos.length === 0) {
+        gridElement.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 2rem;"><p>NO DATA YET IN THIS SECTOR.</p></div>`;
+        return;
+    }
+    
+    gridElement.innerHTML = videosToDisplay.map(generateCardHTML).join('');
+
+    // Hapus tombol Load More sebelumnya jika ada agar tidak ganda
+    let container = gridElement.nextElementSibling;
+    if (container && container.classList.contains('load-more-container')) {
+        container.remove();
+    }
+
+    // Tambahkan tombol Load More jika masih ada sisa video yang belum dirender
+    if (currentLimit < videos.length) {
+        const btnContainer = document.createElement('div');
+        btnContainer.className = 'load-more-container';
+        
+        const btn = document.createElement('button');
+        btn.className = 'load-more-btn';
+        btn.innerText = 'TAMPILKAN LEBIH BANYAK';
+        btn.onclick = () => {
+            appState.displayCount[categoryKey] += CONFIG.ITEMS_PER_PAGE;
+            renderCategory(categoryKey, gridElement);
+        };
+        
+        btnContainer.appendChild(btn);
+        gridElement.parentNode.insertBefore(btnContainer, gridElement.nextSibling);
+    }
+}
+
+/**
+ * INISIALISASI GALERI
+ */
+async function initGallery() {
+    uiState.showLoading();
+    try {
+        const videos = await fetchYouTubeVideos();
+        
+        // Reset state data dan hitungan render
+        appState.data = { regular: [], shorts: [], live: [] };
+        appState.displayCount = { regular: CONFIG.ITEMS_PER_PAGE, shorts: CONFIG.ITEMS_PER_PAGE, live: CONFIG.ITEMS_PER_PAGE };
+        
+        videos.forEach(video => {
+            const isLive = ['live', 'upcoming', 'completed'].includes(video.snippet.liveBroadcastContent);
+            const isShorts = video.snippet.title.toLowerCase().includes('#shorts') || video.snippet.description.toLowerCase().includes('#shorts');
+
+            if (isLive) appState.data.live.push(video);
+            else if (isShorts) appState.data.shorts.push(video);
+            else appState.data.regular.push(video);
+        });
+
+        renderCategory('regular', DOM.videoGrid);
+        renderCategory('shorts', DOM.shortsGrid);
+        renderCategory('live', DOM.liveGrid);
+
+        uiState.showSuccess();
+    } catch (error) {
+        uiState.showError();
+    }
+}
+
+/**
+ * LOGIKA BACK TO TOP
+ */
+function handleScroll() {
+    if (window.scrollY > 400) {
+        DOM.backToTopBtn.classList.add('visible');
+    } else {
+        DOM.backToTopBtn.classList.remove('visible');
+    }
+}
+
+DOM.backToTopBtn.addEventListener('click', () => {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+});
+
+/**
+ * EVENT LISTENERS
+ */
+document.addEventListener('DOMContentLoaded', initGallery);
+window.addEventListener('scroll', handleScroll);
+DOM.retryBtn.addEventListener('click', initGallery);
